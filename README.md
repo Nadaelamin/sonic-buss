@@ -1,4 +1,4 @@
-# Sonic Buss — Student Transportation MVP
+# Sonic Bus — Student Transportation MVP
 
 Arabic RTL student transportation platform for Aswan, built with ASP.NET Core 8 + SQL Server + HTML/CSS/JavaScript.
 

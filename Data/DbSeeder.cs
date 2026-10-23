@@ -11,7 +11,7 @@ public static class DbSeeder
         var hasher = new PasswordHasher<User>();
         if (!await db.Users.AnyAsync())
         {
-            var admin = new User { Name = "Sonic Buss Admin", Phone = "01000000000", Role = UserRole.Admin };
+            var admin = new User { Name = "Sonic Bus Admin", Phone = "01000000000", Role = UserRole.Admin };
             admin.PasswordHash = hasher.HashPassword(admin, "Admin@123");
             var student = new User { Name = "أحمد محمد", Phone = "01111111111", Role = UserRole.Student };
             student.PasswordHash = hasher.HashPassword(student, "123456");
