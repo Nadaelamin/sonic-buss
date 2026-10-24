@@ -43,8 +43,16 @@ async function submitAuth(e, register) { e.preventDefault(); const f = new FormD
 function demoAuth(register, b) { const s = state(); let u = s.users.find(x => x.phone === b.phone); if (register) { if (u) throw new Error('رقم الهاتف مستخدم بالفعل.'); u = { id: Date.now(), name: b.name, phone: b.phone, password: b.password, role: 'Student', cancellationCount: 0, bannedUntil: null }; s.users.push(u); saveState(s); return { token: 'demo', user: { id: u.id, name: u.name, phone: u.phone, role: u.role, cancellationCount: 0, bannedUntil: null } } } if (!u || u.password !== b.password) throw new Error('رقم الهاتف أو كلمة المرور غير صحيحة.'); return { token: 'demo', user: u } }
 
 function tripsPage() { return shell(`<main class="page"><section class="dashboard-head"><div class="container"><h1>الرحلات المتاحة</h1><p>اختار الرحلة ونقطة الركوب المناسبة ليك.</p></div></section><section class="section"><div class="container"><div id="trip-list" class="cards"><div class="empty">جاري تحميل الرحلات...</div></div></div></section></main>`, 'trips') }
-async function loadTrips() { try { let trips = await api('/trips'); renderTripList(trips) } catch { renderTripList(state().trips) } }
-function renderTripList(trips) {
+async function loadTrips() {
+    try {
+        let trips = await api('/trips');
+        console.log('TRIPS FROM API:', trips);
+        renderTripList(trips);
+    } catch (e) {
+        console.error('TRIPS ERROR:', e);
+        renderTripList(state().trips);
+    }
+} function renderTripList(trips) {
     const el = document.getElementById('trip-list');
     if (!el) return;
 
@@ -319,7 +327,6 @@ async function showAdminBookings(tripId) { try { let rows; try { rows = await ap
 async function cancelTrip(id) { if (!confirm('إلغاء الرحلة سيظهر لجميع الطلاب كرحلة ملغاة. هل أنت متأكد؟')) return; try { try { await api('/trips/' + id + '/cancel', { method: 'POST' }) } catch (e) { const s = state(), t = s.trips.find(x => x.id === id); if (t) t.status = 'Cancelled'; saveState(s) } toast('تم إلغاء الرحلة'); loadAdmin() } catch (e) { toast(e.message, true) } }
 
 async function render() { const route = location.hash || '#/'; const u = me(); let html = ''; if (route === '#/' || route === '#') html = home(); else if (route === '#/login') html = authPage(false); else if (route === '#/register') html = authPage(true); else if (route === '#/trips') { html = tripsPage() } else if (route === '#/bookings') { if (!u || u.role !== 'Student') return location.hash = '#/login'; html = bookingsPage() } else if (route === '#/admin') { if (!u || u.role !== 'Admin') return location.hash = '#/login'; html = adminPage() } else html = home(); document.getElementById('app').innerHTML = html; if (route === '#/trips') loadTrips(); if (route === '#/bookings') loadBookings(); if (route === '#/admin') loadAdmin() }
-    async function render() { const route = location.hash || '#/'; const u = me(); let html = ''; if (route === '#/' || route === '#') html = home(); else if (route === '#/login') html = authPage(false); else if (route === '#/register') html = authPage(true); else if (route === '#/trips') { html = tripsPage() } else if (route === '#/bookings') { if (!u || u.role !== 'Student') return location.hash = '#/login'; html = bookingsPage() } else if (route === '#/admin') { if (!u || u.role !== 'Admin') return location.hash = '#/login'; html = adminPage() } else html = home(); document.getElementById('app').innerHTML = html; if (route === '#/trips') loadTrips(); if (route === '#/bookings') loadBookings(); if (route === '#/admin') loadAdmin() }
 
     window.addEventListener('hashchange', render);
     window.addEventListener('DOMContentLoaded', render);
