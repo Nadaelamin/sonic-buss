@@ -37,7 +37,99 @@ function shell(content, active = 'home') {
  ${u ? `<button class="btn btn-outline" onclick="logout()">تسجيل خروج</button>` : `<button class="btn btn-primary" onclick="location.hash='#/login'">دخول</button>`}</nav></div></header>${content}<footer class="footer">Sonic Bus © 2026 — تنقل أسهل للطلاب</footer>`;
 }
 
-function home() { return shell(`<main class="page"><section class="hero"><div class="container hero-grid"><div><span class="eyebrow"> تنقل جامعي أذكى</span><h1>مشوارك للجامعة<br><span>أسهل مع Sonic Bus</span></h1><p>احجز رحلتك بسهولة، اختار نقطة الركوب المناسبة ليك، واعرف تفاصيل الرحلة قبل ما تتحرك.</p><div class="hero-actions"></div><div class="stats"><div class="stat"><b>حجز سريع</b><span>تأكيد فوري</span></div><div class="stat"><b>Stops متعددة</b><span>اختار أقرب نقطة</span></div><div class="stat"><b>دفع نقدي</b><span>عند الركوب</span></div></div></div><div class="mascot"><img src="${logo}" alt="Sonic Bus mascot"></div></div></section><section class="section"><div class="container"><div class="section-title"><div><h2>ليه Sonic Bus؟</h2><p>حل بسيط لمشكلة المواصلات اليومية للطلاب.</p></div></div><div class="cards"><div class="card"><h3>اعرف الرحلة</h3><p>كل تفاصيل الرحلة والسائق ونقاط الركوب في مكان واحد.</p></div><div class="card"><h3>احجز في وقتك</h3><p>كل رحلة لها فترة حجز محددة يحددها فريق Sonic Bus.</p></div><div class="card"><h3>حجز موثّق</h3><p>بعد الحجز تحصل على كود فريد خاص بالحجز.</p></div></div></div></section></main>`) }
+function home() {
+    return shell(`
+    < main class="page" >
+
+            <section class="hero">
+                <div class="container hero-grid">
+
+                    <div>
+                        <span class="eyebrow">تنقل جامعي أذكى</span>
+
+                        <h1>
+                            مشوارك للجامعة<br>
+                            <span>أسهل مع Sonic Bus</span>
+                        </h1>
+
+                        <p>
+                            احجز رحلتك بسهولة، اختار نقطة ركوب قريبة من بيتك،
+                            واطمئن إن مقعدك محفوظ عشان توصل براحة وأمان وفي الموعد.
+                        </p>
+
+                        <div class="hero-actions"></div>
+
+                        <div class="stats">
+
+                            <div class="stat">
+                                <b>حجز سهل ومرن</b>
+                                <span>اختار الرحلة اللي تناسب مواعيدك</span>
+                            </div>
+
+                            <div class="stat">
+                                <b>مقعد مضمون</b>
+                                <span>مقعدك محفوظ بعد إتمام الحجز</span>
+                            </div>
+
+                            <div class="stat">
+                                <b>نقطة ركوب قريبة من بيتك</b>
+                                <span>اختار نقطة ركوب مناسبة وقريبة منك</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="mascot">
+                        <img src="${logo}" alt="Sonic Bus mascot">
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+
+                    <div class="section-title">
+                        <div>
+                            <h2>ليه Sonic Bus؟</h2>
+                            <p>
+                                حل أبسط لمواصلاتك اليومية، من الحجز لحد الوصول.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="cards">
+
+                        <div class="card">
+                            <h3>احجز بسهولة</h3>
+                            <p>
+                                اختار الرحلة المناسبة ليك واحجز مقعدك في خطوات بسيطة.
+                            </p>
+                        </div>
+
+                        <div class="card">
+                            <h3>نقطة ركوب قريبة</h3>
+                            <p>
+                                اختار نقطة ركوب قريبة من بيتك عشان تبدأ مشوارك بسهولة.
+                            </p>
+                        </div>
+
+                        <div class="card">
+                            <h3>راحة وأمان</h3>
+                            <p>
+                                استمتع برحلة أكثر راحة وأمانًا، مع وصول منتظم في الموعد.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+        </main >
+    `)
+}
+
 function authPage(register = false) { return `<main class="auth-wrap"><div class="auth"><div class="auth-logo"><img src="${logo}" alt="Sonic Bus"></div><h1>${register ? 'إنشاء حساب' : 'تسجيل الدخول'}</h1><p class="muted">${register ? 'سجل بياناتك وابدأ حجز رحلاتك.' : 'أهلاً بيك في Sonic Bus.'}</p><form onsubmit="submitAuth(event,${register})">${register ? `<div class="field"><label>الاسم</label><input name="name" required placeholder="اكتب اسمك الكامل"></div>` : ''}<div class="field"><label>رقم الهاتف</label><input name="phone" required inputmode="tel" placeholder="01xxxxxxxxx"></div><div class="field"><label>كلمة المرور</label><input name="password" type="password" required minlength="6" placeholder="••••••••"></div><button class="btn btn-primary" style="width:100%">${register ? 'إنشاء الحساب' : 'دخول'}</button></form><div class="auth-switch">${register ? 'عندك حساب بالفعل؟' : 'لسه معندكش حساب؟'} <span class="link" onclick="location.hash='${register ? '#/login' : '#/register'}'">${register ? 'سجل دخول' : 'إنشاء حساب'}</span></div><div class="auth-switch"><span class="link" onclick="location.hash='#/'">العودة للرئيسية</span></div></div></main>` }
 async function submitAuth(e, register) {
     e.preventDefault();
