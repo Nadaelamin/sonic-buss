@@ -39,7 +39,7 @@ function shell(content, active = 'home') {
 
 function home() {
     return shell(`
-    < main class="page" >
+        <main class="page">
 
             <section class="hero">
                 <div class="container hero-grid">
@@ -126,8 +126,8 @@ function home() {
                 </div>
             </section>
 
-        </main >
-    `)
+        </main>
+    `);
 }
 
 function authPage(register = false) { return `<main class="auth-wrap"><div class="auth"><div class="auth-logo"><img src="${logo}" alt="Sonic Bus"></div><h1>${register ? 'إنشاء حساب' : 'تسجيل الدخول'}</h1><p class="muted">${register ? 'سجل بياناتك وابدأ حجز رحلاتك.' : 'أهلاً بيك في Sonic Bus.'}</p><form onsubmit="submitAuth(event,${register})">${register ? `<div class="field"><label>الاسم</label><input name="name" required placeholder="اكتب اسمك الكامل"></div>` : ''}<div class="field"><label>رقم الهاتف</label><input name="phone" required inputmode="tel" placeholder="01xxxxxxxxx"></div><div class="field"><label>كلمة المرور</label><input name="password" type="password" required minlength="6" placeholder="••••••••"></div><button class="btn btn-primary" style="width:100%">${register ? 'إنشاء الحساب' : 'دخول'}</button></form><div class="auth-switch">${register ? 'عندك حساب بالفعل؟' : 'لسه معندكش حساب؟'} <span class="link" onclick="location.hash='${register ? '#/login' : '#/register'}'">${register ? 'سجل دخول' : 'إنشاء حساب'}</span></div><div class="auth-switch"><span class="link" onclick="location.hash='#/'">العودة للرئيسية</span></div></div></main>` }
