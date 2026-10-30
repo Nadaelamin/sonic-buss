@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<Trip> Trips => Set<Trip>();
     public DbSet<Stop> Stops => Set<Stop>();
     public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<TripMessage> TripMessages => Set<TripMessage>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {

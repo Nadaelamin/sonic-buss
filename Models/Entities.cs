@@ -15,6 +15,7 @@ public class User
     public DateTime? BannedUntil { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public ICollection<TripMessage> TripMessages { get; set; } = new List<TripMessage>();
 }
 
 public class Driver
@@ -68,4 +69,19 @@ public class Booking
     public BookingStatus Status { get; set; } = BookingStatus.Confirmed;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CancelledAt { get; set; }
+}
+
+public class TripMessage
+{
+    public int Id { get; set; }
+
+    public int TripId { get; set; }
+    public Trip Trip { get; set; } = null!;
+
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
+
+    public string Message { get; set; } = "";
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

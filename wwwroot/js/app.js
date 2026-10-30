@@ -39,20 +39,93 @@ function shell(content, active = 'home') {
 
 function home() { return shell(`<main class="page"><section class="hero"><div class="container hero-grid"><div><span class="eyebrow"> تنقل جامعي أذكى</span><h1>مشوارك للجامعة<br><span>أسهل مع Sonic Bus</span></h1><p>احجز رحلتك بسهولة، اختار نقطة الركوب المناسبة ليك، واعرف تفاصيل الرحلة قبل ما تتحرك.</p><div class="hero-actions"></div><div class="stats"><div class="stat"><b>حجز سريع</b><span>تأكيد فوري</span></div><div class="stat"><b>Stops متعددة</b><span>اختار أقرب نقطة</span></div><div class="stat"><b>دفع نقدي</b><span>عند الركوب</span></div></div></div><div class="mascot"><img src="${logo}" alt="Sonic Bus mascot"></div></div></section><section class="section"><div class="container"><div class="section-title"><div><h2>ليه Sonic Bus؟</h2><p>حل بسيط لمشكلة المواصلات اليومية للطلاب.</p></div></div><div class="cards"><div class="card"><h3>اعرف الرحلة</h3><p>كل تفاصيل الرحلة والسائق ونقاط الركوب في مكان واحد.</p></div><div class="card"><h3>احجز في وقتك</h3><p>كل رحلة لها فترة حجز محددة يحددها فريق Sonic Bus.</p></div><div class="card"><h3>حجز موثّق</h3><p>بعد الحجز تحصل على كود فريد خاص بالحجز.</p></div></div></div></section></main>`) }
 function authPage(register = false) { return `<main class="auth-wrap"><div class="auth"><div class="auth-logo"><img src="${logo}" alt="Sonic Bus"></div><h1>${register ? 'إنشاء حساب' : 'تسجيل الدخول'}</h1><p class="muted">${register ? 'سجل بياناتك وابدأ حجز رحلاتك.' : 'أهلاً بيك في Sonic Bus.'}</p><form onsubmit="submitAuth(event,${register})">${register ? `<div class="field"><label>الاسم</label><input name="name" required placeholder="اكتب اسمك الكامل"></div>` : ''}<div class="field"><label>رقم الهاتف</label><input name="phone" required inputmode="tel" placeholder="01xxxxxxxxx"></div><div class="field"><label>كلمة المرور</label><input name="password" type="password" required minlength="6" placeholder="••••••••"></div><button class="btn btn-primary" style="width:100%">${register ? 'إنشاء الحساب' : 'دخول'}</button></form><div class="auth-switch">${register ? 'عندك حساب بالفعل؟' : 'لسه معندكش حساب؟'} <span class="link" onclick="location.hash='${register ? '#/login' : '#/register'}'">${register ? 'سجل دخول' : 'إنشاء حساب'}</span></div><div class="auth-switch"><span class="link" onclick="location.hash='#/'">العودة للرئيسية</span></div></div></main>` }
-async function submitAuth(e, register) { e.preventDefault(); const f = new FormData(e.target); const body = Object.fromEntries(f.entries()); try { let data; try { data = await api(register ? '/auth/register' : '/auth/login', { method: 'POST', body: JSON.stringify(body) }) } catch (err) { data = demoAuth(register, body) } setAuth(data); toast(register ? 'تم إنشاء الحساب بنجاح' : 'تم تسجيل الدخول بنجاح'); location.hash = data.user.role === 'Admin' ? '#/admin' : '#/trips'; render() } catch (err) { toast(err.message, true) } }
-function demoAuth(register, b) { const s = state(); let u = s.users.find(x => x.phone === b.phone); if (register) { if (u) throw new Error('رقم الهاتف مستخدم بالفعل.'); u = { id: Date.now(), name: b.name, phone: b.phone, password: b.password, role: 'Student', cancellationCount: 0, bannedUntil: null }; s.users.push(u); saveState(s); return { token: 'demo', user: { id: u.id, name: u.name, phone: u.phone, role: u.role, cancellationCount: 0, bannedUntil: null } } } if (!u || u.password !== b.password) throw new Error('رقم الهاتف أو كلمة المرور غير صحيحة.'); return { token: 'demo', user: u } }
+async function submitAuth(e, register) {
+    e.preventDefault();
+
+    const f = new FormData(e.target);
+    const body = Object.fromEntries(f.entries());
+
+    try {
+        const data = await api(
+            register ? '/auth/register' : '/auth/login',
+            {
+                method: 'POST',
+                body: JSON.stringify(body)
+            }
+        );
+
+        setAuth(data);
+
+        toast(
+            register
+                ? 'تم إنشاء الحساب بنجاح'
+                : 'تم تسجيل الدخول بنجاح'
+        );
+
+        location.hash =
+            data.user.role === 'Admin'
+                ? '#/admin'
+                : '#/trips';
+
+        render();
+
+    } catch (err) {
+        console.error('AUTH ERROR:', err);
+        toast(err.message || 'حدث خطأ أثناء تسجيل الدخول.', true);
+    }
+} function demoAuth(register, b) { const s = state(); let u = s.users.find(x => x.phone === b.phone); if (register) { if (u) throw new Error('رقم الهاتف مستخدم بالفعل.'); u = { id: Date.now(), name: b.name, phone: b.phone, password: b.password, role: 'Student', cancellationCount: 0, bannedUntil: null }; s.users.push(u); saveState(s); return { token: 'demo', user: { id: u.id, name: u.name, phone: u.phone, role: u.role, cancellationCount: 0, bannedUntil: null } } } if (!u || u.password !== b.password) throw new Error('رقم الهاتف أو كلمة المرور غير صحيحة.'); return { token: 'demo', user: u } }
 
 function tripsPage() { return shell(`<main class="page"><section class="dashboard-head"><div class="container"><h1>الرحلات المتاحة</h1><p>اختار الرحلة ونقطة الركوب المناسبة ليك.</p></div></section><section class="section"><div class="container"><div id="trip-list" class="cards"><div class="empty">جاري تحميل الرحلات...</div></div></div></section></main>`, 'trips') }
 async function loadTrips() {
     try {
-        let trips = await api('/trips');
+        const trips = await api('/trips');
+
         console.log('TRIPS FROM API:', trips);
-        renderTripList(trips);
+
+        const currentUser = me();
+        const isAdmin = currentUser?.role === 'Admin';
+
+        let confirmedTripIds = new Set();
+
+        if (!isAdmin) {
+            try {
+                const bookings = await api('/bookings/mine');
+
+                confirmedTripIds = new Set(
+                    bookings
+                        .filter(b => b.status === 'Confirmed')
+                        .map(b => Number(b.trip?.id))
+                );
+            } catch (error) {
+                console.error('BOOKINGS FOR CHAT ERROR:', error);
+            }
+        }
+
+        renderTripList(trips, confirmedTripIds);
+
     } catch (e) {
         console.error('TRIPS ERROR:', e);
-        renderTripList(state().trips);
+
+        const s = state();
+        const u = me();
+
+        const confirmedTripIds = new Set(
+            s.bookings
+                .filter(b =>
+                    b.userId === u?.id &&
+                    b.status === 'Confirmed'
+                )
+                .map(b => Number(b.tripId))
+        );
+
+        renderTripList(
+            s.trips,
+            confirmedTripIds
+        );
     }
-} function renderTripList(trips) {
+}
+
+function renderTripList(trips, confirmedTripIds = new Set()) {
     const el = document.getElementById('trip-list');
     if (!el) return;
 
@@ -73,10 +146,14 @@ async function loadTrips() {
     }
 
     el.innerHTML = visibleTrips.map(t => {
-        const departure = t.departureAt ? new Date(t.departureAt) : null;
+        const departure = t.departureAt
+            ? new Date(t.departureAt)
+            : null;
 
         const day = departure
-            ? departure.toLocaleDateString('ar-EG', { weekday: 'long' })
+            ? departure.toLocaleDateString('ar-EG', {
+                weekday: 'long'
+            })
             : '—';
 
         const date = departure
@@ -96,10 +173,16 @@ async function loadTrips() {
 
         return `
             <article class="card trip-card">
+
                 <div class="trip-head">
-                    <div class="trip-title">${esc(t.name)}</div>
+                    <div class="trip-title">
+                        ${esc(t.name)}
+                    </div>
+
                     <span class="badge">
-                        ${t.availableSeats > 0 ? 'متاح للحجز' : 'مكتمل'}
+                        ${t.availableSeats > 0
+                ? 'متاح للحجز'
+                : 'مكتمل'}
                     </span>
                 </div>
 
@@ -144,18 +227,42 @@ async function loadTrips() {
                 </div>
 
                 <div class="trip-footer">
+
                     <span class="price">
                         ${money(t.price)}
                         <span>عند الركوب</span>
                     </span>
 
-                    <button
-                        class="btn btn-primary"
-                        ${t.availableSeats <= 0 ? 'disabled' : ''}
-                        onclick='openTrip(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
-                        عرض التفاصيل
-                    </button>
+                    <div style="
+                        display:flex;
+                        gap:8px;
+                        flex-wrap:wrap;
+                        justify-content:flex-end;
+                    ">
+
+                       ${
+            isAdmin || confirmedTripIds.has(Number(t.id))
+                ? `
+            <button
+                class="btn"
+                onclick="location.hash='#/trip-chat/${t.id}'">
+                💬 شات الرحلة
+            </button>
+          `
+                : ''
+}
+
+                        <button
+                            class="btn btn-primary"
+                            ${t.availableSeats <= 0 ? 'disabled' : ''}
+                            onclick='openTrip(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                            عرض التفاصيل
+                        </button>
+
+                    </div>
+
                 </div>
+
             </article>
         `;
     }).join('');
@@ -320,13 +427,423 @@ function adminPage() { return shell(`<main class="page"><section class="dashboar
 function addStop() { document.getElementById('stop-inputs').insertAdjacentHTML('beforeend', '<div class="stop-row"><input name="stops" required placeholder="نقطة الركوب"><button type="button" onclick="this.parentElement.remove()">×</button></div>') }
 async function loadAdmin() { try { const [m, trips] = await Promise.all([api('/admin/dashboard'), api('/admin/trips')]); renderMetrics(m); renderAdminTrips(trips) } catch { const s = state(); renderMetrics({ students: s.users.filter(u => u.role === 'Student').length, trips: s.trips.length, bookings: s.bookings.filter(b => b.status === 'Confirmed').length, cancelledBookings: s.bookings.filter(b => b.status === 'Cancelled').length }); renderAdminTrips(s.trips.map(t => ({ ...t, status: t.status, driver: t.driver }))) } }
 function renderMetrics(m) { const el = document.getElementById('metrics'); if (!el) return; el.innerHTML = [['الطلاب', m.students], ['الرحلات', m.trips], ['الحجوزات', m.bookings], ['الحجوزات الملغاة', m.cancelledBookings]].map(x => `<div class="metric"><small>${x[0]}</small><strong>${Number(x[1]).toLocaleString('ar-EG')}</strong></div>`).join('') }
-function renderAdminTrips(rows) { const el = document.getElementById('admin-trips'); if (!el) return; if (!rows.length) { el.innerHTML = '<div class="empty">لا توجد رحلات.</div>'; return } el.innerHTML = rows.map(t => `<div class="booking"><div><b>${esc(t.name)}</b><div><small>${fmt(t.departureAt)} • ${t.availableSeats}/${t.totalSeats} مقعد متاح</small></div><div><small>السائق: ${esc(t.driver?.name || '—')}</small></div><div class="${t.status === 'Cancelled' ? 'status-cancelled' : 'status-confirmed'}">${t.status === 'Cancelled' ? 'ملغاة' : 'نشطة'}</div></div><div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="showAdminBookings(${t.id})">الحجوزات</button>${t.status !== 'Cancelled' ? `<button class="btn btn-danger" onclick="cancelTrip(${t.id})">إلغاء الرحلة</button>` : ''}</div></div>`).join('') }
-async function createTrip(e) { e.preventDefault(); const f = new FormData(e.target); const g = n => f.get(n); const stops = [...document.querySelectorAll('input[name=stops]')].map(x => x.value.trim()).filter(Boolean); const req = { name: g('name'), from: g('from'), to: g('to'), departureAt: new Date(g('departureAt')).toISOString(), totalSeats: Number(g('totalSeats')), price: Number(g('price')), bookingOpensAt: new Date(g('bookingOpensAt')).toISOString(), bookingClosesAt: new Date(g('bookingClosesAt')).toISOString(), cancellationClosesAt: new Date(g('cancellationClosesAt')).toISOString(), driver: { name: g('driverName'), phone: g('driverPhone'), vehicleType: g('vehicleType'), vehiclePlate: g('vehiclePlate') }, stops }; try { try { await api('/trips', { method: 'POST', body: JSON.stringify(req) }) } catch (e) { demoCreate(req) } toast('تم إنشاء الرحلة بنجاح'); e.target.reset(); document.getElementById('stop-inputs').innerHTML = '<div class="stop-row"><input name="stops" required placeholder="نقطة الركوب 1"><button type="button" onclick="this.parentElement.remove()">×</button></div>'; loadAdmin() } catch (e) { toast(e.message, true) } }
+function renderAdminTrips(rows) {
+    const el = document.getElementById('admin-trips');
+    if (!el) return;
+
+    if (!rows.length) {
+        el.innerHTML = '<div class="empty">لا توجد رحلات.</div>';
+        return;
+    }
+
+    el.innerHTML = rows.map(t => `
+        <div class="booking">
+
+            <div>
+                <b>${esc(t.name)}</b>
+
+                <div>
+                    <small>
+                        ${fmt(t.departureAt)} •
+                        ${t.availableSeats}/${t.totalSeats} مقعد متاح
+                    </small>
+                </div>
+
+                <div>
+                    <small>
+                        السائق: ${esc(t.driver?.name || '—')}
+                    </small>
+                </div>
+
+                <div class="${t.status === 'Cancelled'
+            ? 'status-cancelled'
+            : 'status-confirmed'}">
+                    ${t.status === 'Cancelled' ? 'ملغاة' : 'نشطة'}
+                </div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+
+                <button
+                    class="btn"
+                    onclick="location.hash='#/trip-chat/${t.id}'">
+                    💬 شات الرحلة
+                </button>
+
+                <button
+                    class="btn btn-outline"
+                    onclick="showAdminBookings(${t.id})">
+                    الحجوزات
+                </button>
+
+                ${t.status !== 'Cancelled'
+            ? `
+                        <button
+                            class="btn btn-danger"
+                            onclick="cancelTrip(${t.id})">
+                            إلغاء الرحلة
+                        </button>
+                    `
+            : ''
+        }
+
+            </div>
+
+        </div>
+    `).join('');
+} async function createTrip(e) { e.preventDefault(); const f = new FormData(e.target); const g = n => f.get(n); const stops = [...document.querySelectorAll('input[name=stops]')].map(x => x.value.trim()).filter(Boolean); const req = { name: g('name'), from: g('from'), to: g('to'), departureAt: new Date(g('departureAt')).toISOString(), totalSeats: Number(g('totalSeats')), price: Number(g('price')), bookingOpensAt: new Date(g('bookingOpensAt')).toISOString(), bookingClosesAt: new Date(g('bookingClosesAt')).toISOString(), cancellationClosesAt: new Date(g('cancellationClosesAt')).toISOString(), driver: { name: g('driverName'), phone: g('driverPhone'), vehicleType: g('vehicleType'), vehiclePlate: g('vehiclePlate') }, stops }; try { try { await api('/trips', { method: 'POST', body: JSON.stringify(req) }) } catch (e) { demoCreate(req) } toast('تم إنشاء الرحلة بنجاح'); e.target.reset(); document.getElementById('stop-inputs').innerHTML = '<div class="stop-row"><input name="stops" required placeholder="نقطة الركوب 1"><button type="button" onclick="this.parentElement.remove()">×</button></div>'; loadAdmin() } catch (e) { toast(e.message, true) } }
 function demoCreate(r) { const s = state(), id = Math.max(0, ...s.trips.map(x => x.id)) + 1; s.trips.push({ id, ...r, status: 'Open', availableSeats: r.totalSeats, driver: r.driver, stops: r.stops.map((name, i) => ({ id: Date.now() + i, name, order: i + 1 })) }); saveState(s) }
 async function showAdminBookings(tripId) { try { let rows; try { rows = await api('/admin/trips/' + tripId + '/bookings') } catch { const s = state(); rows = s.bookings.filter(b => b.tripId === tripId).map(b => { const u = s.users.find(x => x.id === b.userId), t = s.trips.find(x => x.id === tripId), st = t.stops.find(x => x.id === b.stopId); return { id: b.id, bookingCode: b.bookingCode, status: b.status, student: { name: u.name, phone: u.phone }, stop: st.name, createdAt: b.createdAt } }) } document.body.insertAdjacentHTML('beforeend', `<div class="modal-backdrop" id="admin-modal"><div class="modal"><div class="modal-head"><h2>طلاب الرحلة</h2><button class="close" onclick="document.getElementById('admin-modal').remove()">×</button></div><div class="table-wrap"><table class="table"><thead><tr><th>الطالب</th><th>الهاتف</th><th>الكود</th><th>النقطة</th><th>الحالة</th></tr></thead><tbody>${rows.map(b => `<tr><td>${esc(b.student?.name)}</td><td>${esc(b.student?.phone)}</td><td><b>${esc(b.bookingCode)}</b></td><td>${esc(b.stop)}</td><td>${b.status === 'Confirmed' ? 'مؤكد' : 'ملغي'}</td></tr>`).join('')}</tbody></table></div></div></div>`) } catch (e) { toast(e.message, true) } }
 async function cancelTrip(id) { if (!confirm('إلغاء الرحلة سيظهر لجميع الطلاب كرحلة ملغاة. هل أنت متأكد؟')) return; try { try { await api('/trips/' + id + '/cancel', { method: 'POST' }) } catch (e) { const s = state(), t = s.trips.find(x => x.id === id); if (t) t.status = 'Cancelled'; saveState(s) } toast('تم إلغاء الرحلة'); loadAdmin() } catch (e) { toast(e.message, true) } }
 
-async function render() { const route = location.hash || '#/'; const u = me(); let html = ''; if (route === '#/' || route === '#') html = home(); else if (route === '#/login') html = authPage(false); else if (route === '#/register') html = authPage(true); else if (route === '#/trips') { html = tripsPage() } else if (route === '#/bookings') { if (!u || u.role !== 'Student') return location.hash = '#/login'; html = bookingsPage() } else if (route === '#/admin') { if (!u || u.role !== 'Admin') return location.hash = '#/login'; html = adminPage() } else html = home(); document.getElementById('app').innerHTML = html; if (route === '#/trips') loadTrips(); if (route === '#/bookings') loadBookings(); if (route === '#/admin') loadAdmin() }
+async function render() {
+    const route = location.hash || '#/';
+    const u = me();
+    let html = '';
 
+    if (route === '#/' || route === '#') {
+        html = home();
+    }
+    else if (route === '#/login') {
+        html = authPage(false);
+    }
+    else if (route === '#/register') {
+        html = authPage(true);
+    }
+    else if (route === '#/trips') {
+        html = tripsPage();
+    }
+    else if (route === '#/bookings') {
+        if (!u || u.role !== 'Student') {
+            return location.hash = '#/login';
+        }
+
+        html = bookingsPage();
+    }
+    else if (route === '#/admin') {
+        if (!u || u.role !== 'Admin') {
+            return location.hash = '#/login';
+        }
+
+        html = adminPage();
+    }
+    else if (route.startsWith('#/trip-chat/')) {
+        if (!u) {
+            return location.hash = '#/login';
+        }
+
+        const tripId = Number(
+            route.split('/')[2]
+        );
+
+        if (!tripId) {
+            return location.hash = '#/trips';
+        }
+
+        html = tripChatPage(tripId);
+    }
+    else {
+        html = home();
+    }
+
+    document.getElementById('app').innerHTML = html;
+
+    if (route === '#/trips') {
+        loadTrips();
+    }
+
+    if (route === '#/bookings') {
+        loadBookings();
+    }
+
+    if (route === '#/admin') {
+        loadAdmin();
+    }
+
+    if (route.startsWith('#/trip-chat/')) {
+        const tripId = Number(
+            route.split('/')[2]
+        );
+
+        await loadTripChat(tripId);
+
+        try {
+            await connectTripChat(
+                tripId,
+                addTripChatMessage
+            );
+        }
+        catch (error) {
+            console.error(
+                'Trip chat connection failed:',
+                error
+            );
+        }
+    }
+}
     window.addEventListener('hashchange', render);
-    window.addEventListener('DOMContentLoaded', render);
+window.addEventListener('DOMContentLoaded', render);
+
+let tripChatConnection = null;
+let currentChatTripId = null;
+
+async function connectTripChat(tripId, onMessage) {
+    currentChatTripId = tripId;
+
+    if (tripChatConnection) {
+        try {
+            await tripChatConnection.stop();
+        } catch {
+        }
+    }
+
+    tripChatConnection = new signalR.HubConnectionBuilder()
+        .withUrl('/hubs/trip-chat', {
+            accessTokenFactory: () => token() || ''        })
+        .withAutomaticReconnect()
+        .build();
+
+    tripChatConnection.on('ReceiveMessage', message => {
+        if (message.tripId !== currentChatTripId) return;
+
+        if (typeof onMessage === 'function') {
+            onMessage(message);
+        }
+    });
+
+    await tripChatConnection.start();
+
+    await tripChatConnection.invoke(
+        'JoinTrip',
+        tripId
+    );
+}
+
+async function disconnectTripChat() {
+    if (!tripChatConnection) return;
+
+    try {
+        if (currentChatTripId) {
+            await tripChatConnection.invoke(
+                'LeaveTrip',
+                currentChatTripId
+            );
+        }
+    } catch {
+    }
+
+    try {
+        await tripChatConnection.stop();
+    } catch {
+    }
+
+    tripChatConnection = null;
+    currentChatTripId = null;
+}
+
+
+function tripChatPage(tripId) {
+    return shell(`
+        <main class="auth-wrap">
+            <div class="auth" style="max-width:700px;width:100%;">
+
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <button
+                        class="btn"
+                        onclick="history.back()">
+                        ← رجوع
+                    </button>
+
+                    <h1 style="margin:0;">
+                        💬 شات الرحلة
+                    </h1>
+                </div>
+
+                <div id="trip-chat-messages"
+                     style="
+                        height:400px;
+                        overflow-y:auto;
+                        padding:15px;
+                        border:1px solid #ddd;
+                        border-radius:12px;
+                        margin-bottom:15px;
+                        background:#fafafa;
+                     ">
+                    <div class="muted" style="text-align:center;">
+                        جاري تحميل الرسائل...
+                    </div>
+                </div>
+
+                <form onsubmit="sendTripChatMessage(event)"
+                      style="display:flex;gap:10px;">
+
+                    <input
+                        id="trip-chat-input"
+                        type="text"
+                        placeholder="اكتب رسالتك..."
+                        autocomplete="off"
+                        required
+                        style="flex:1;">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+                        إرسال
+                    </button>
+
+                </form>
+
+            </div>
+        </main>
+    `);
+}
+
+async function loadTripChat(tripId) {
+    const container =
+        document.getElementById('trip-chat-messages');
+
+    if (!container) return;
+
+    try {
+        const response = await fetch(
+            `/api/trips/${tripId}/messages`,
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token()}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                container.innerHTML = `
+                    <div class="muted" style="text-align:center;">
+                        لا يمكنك الدخول إلى شات هذه الرحلة.
+                    </div>
+                `;
+                return;
+            }
+
+            throw new Error('Failed to load messages');
+        }
+
+        const messages = await response.json();
+
+        container.innerHTML = '';
+
+        messages.forEach(message => {
+            addTripChatMessage(message);
+        });
+
+        container.scrollTop = container.scrollHeight;
+
+    } catch (error) {
+        console.error(error);
+
+        container.innerHTML = `
+            <div class="muted" style="text-align:center;">
+                حدث خطأ أثناء تحميل الرسائل.
+            </div>
+        `;
+    }
+}
+
+function addTripChatMessage(message) {
+    const container =
+        document.getElementById('trip-chat-messages');
+
+    if (!container) return;
+
+    const currentUser = me();
+
+    const isMine =
+        currentUser &&
+        Number(currentUser.id) === Number(message.userId);
+
+    const messageElement = document.createElement('div');
+
+    messageElement.style.cssText = `
+        display:flex;
+        justify-content:${isMine ? 'flex-end' : 'flex-start'};
+        margin-bottom:10px;
+    `;
+
+    messageElement.innerHTML = `
+        <div style="
+            max-width:75%;
+            padding:10px 14px;
+            border-radius:12px;
+            background:${isMine ? '#ff9f1c' : '#ffffff'};
+            color:${isMine ? '#ffffff' : '#222'};
+            border:1px solid #ddd;
+        ">
+            <div style="
+                font-size:12px;
+                font-weight:bold;
+                margin-bottom:4px;
+            ">
+                ${message.userName}
+            </div>
+
+            <div>
+                ${message.message}
+            </div>
+
+            <div style="
+                font-size:10px;
+                opacity:.7;
+                margin-top:5px;
+            ">
+                ${new Date(message.createdAt).toLocaleTimeString('ar-EG', {
+        hour: '2-digit',
+        minute: '2-digit'
+    })}
+            </div>
+        </div>
+    `;
+
+    container.appendChild(messageElement);
+
+    container.scrollTop = container.scrollHeight;
+}
+
+
+async function sendTripChatMessage(event) {
+    event.preventDefault();
+
+    const input = document.getElementById('trip-chat-input');
+    if (!input) return;
+
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    if (
+        !tripChatConnection ||
+        tripChatConnection.state !== signalR.HubConnectionState.Connected
+    ) {
+        console.error(
+            'Trip chat is not connected. Current state:',
+            tripChatConnection?.state
+        );
+        return;
+    }
+
+    const tripId =
+        Number(location.hash.split('/').pop());
+
+    try {
+        await tripChatConnection.invoke(
+            'SendMessage',
+            tripId,
+            message
+        );
+
+        input.value = '';
+        input.focus();
+
+    } catch (error) {
+        console.error('SEND CHAT ERROR:', error);
+    }
+}
