@@ -348,7 +348,7 @@ function renderTripList(trips, confirmedTripIds = new Set()) {
                             class="btn btn-primary"
                             ${t.availableSeats <= 0 ? 'disabled' : ''}
                             onclick='openTrip(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
-                            عرض التفاصيل
+                            احجز الآن
                         </button>
 
                     </div>
